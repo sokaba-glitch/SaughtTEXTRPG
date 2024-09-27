@@ -1,0 +1,362 @@
+import random
+
+# Game Data
+Keys = {
+    "Name": "Dungeon Key",
+    "Unlocks": ["Dungeon"],
+    "Desc": "A rusty old key, said to unlock the dungeon entrance"
+}
+rooms = {
+    "Guides Realm": {
+        "desc": "a sign here says -You can also venture other ways- perhaps i should go out?",
+        "out" : "Nexus",
+        "action": "racechoice"
+    },
+    "Nexus": {
+        "desc": "The Nexus, a Finite Hub of Collected Places. Ancient energies spill out, whispering powers to those who grasp them.",
+        "north": "Shop",
+        "south": "Apothecary",
+        "east": "Inn",
+        "west": "Forge",
+        "in": "Guides Realm"
+    },
+    "Shop": {
+        "desc": "A bustling marketplace filled with exotic goods. Merchants peddle their wares, eager to strike a deal.",
+        "south": "Nexus",
+        "Key": "Dungeon Key"
+    },
+    "Inn": {
+        "desc": "A cozy resting place with warm fire and cold ale. Travelers share tales of adventure and danger.",
+        "west": "Nexus"
+    },
+    "Forge": {
+        "desc": "A fiery workshop where master smiths craft fine arms. The scent of hot metal and sweat fills the air.",
+        "east": "Nexus",
+        "action": "firstmainhand"
+    },
+    "Apothecary": {
+        "desc": "A mysterious shop filled with rare potions and herbs. The apothecary's knowledge is both vast and unsettling.",
+        "north": "Nexus",
+        "east": "Forest Trail",
+        "south": "Graveyard"
+    },
+    "Forest Trail": {
+        "desc": "A winding path through the Whispering Woods, where ancient trees loom and wild creatures roam.",
+        "west": "Apothecary",
+        "east": "Serene Clearing"
+    },
+    "Serene Clearing": {
+        "desc": "A tranquil glade, filled with wildflowers and the songs of birds. A weathered stone pedestal bears an inscription.",
+        "north": "Fortune Teller",
+        "west": "Forest Trail"
+    },
+    "Fortune Teller": {
+        "desc": "You stumble across the Fortune Tellers tent.",
+        "south": "Serene Clearing",
+        "action": "reading"
+    },
+    "Dungeon": {
+        "desc": "A dark and foreboding dungeon, filled with ancient secrets and hidden dangers.",
+        "north": "Exit",
+        "south": "Torture Chamber",
+        "east": "Musty Corridor",
+        "west": "Labyrinth",
+        "Requires": "Dungeon Key"
+    },
+    "Graveyard": {
+        "desc": "A grand yard, leading out of the dungeon and into death.",
+        "south": "Dungeon",
+        "north": "Apothecary"
+    },
+    "Musty Corridor": {
+        "desc": "A grim room filled with instruments of pain and suffering.",
+        "north": "Dungeon"
+    },
+    "Treasure Room": {
+        "desc": "A glittering trove of treasure, filled with gold and precious jewels.",
+        "west": "Dungeon"
+    },
+    "Labyrinth": {
+        "desc": "A confusing maze of twisting corridors and dark shadows.",
+        "east": "Dungeon"
+    }
+}
+tarot = {
+    "The Magician": {
+        "hp_bonus1": 5,
+        "exp_gain1": 1,
+        "roll_mod1": 0.1
+    },
+    "The Priestess": {
+        "hp_bonus1": 10,
+        "exp_gain1": 1,
+        "roll_mod1": 0.75
+    },
+    "The Empress": {
+        "hp_bonus1": 5,
+        "exp_gain1": 2,
+        "roll_mod1": 1
+    },
+    "The Emperor": {
+        "hp_bonus1": 3,
+        "exp_gain1": 1,
+        "roll_mod1": 0.10
+    },
+    "The Hierophant": {
+        "hp_bonus1": 8,
+        "exp_gain1": 1,
+        "roll_mod1": 0.50
+    },
+    "The Chariot": {
+        "hp_bonus1": 4,
+        "exp_gain1": 1,
+        "roll_mod1": 0.75
+    },
+    "The Hermit": {
+        "hp_bonus1": 25,
+        "exp_gain1": 0.50,
+        "roll_mod1": 0.50
+    },
+    "The Fool": {
+        "hp_bonus1": 1,
+        "exp_gain1": 2,
+        "roll_mod1": 3
+    },
+    "Death": {
+        "hp_bonus1": -5,
+        "exp_gain1": 10,
+        "roll_mod1": 0.75
+    }
+}
+firstweapons = {
+    "Sword": {"roll_mod": +1},
+    "Bow": {"roll_mod": 1},
+    "Staff": {"roll_mod": 1},
+    "Mace":{"roll_mod": 1},
+    "Lute":{"roll_mod": 1}
+}
+races = {
+  "a Human": {
+    "hp_bonus2": 5,
+    "exp_gain2": 5,
+    "roll_mod2": 0.5
+  },
+  "a Dwarf": {
+    "hp_bonus2": 10,
+    "exp_gain2": 5,
+    "roll_mod2": 0.5
+  },
+  "an Elf": {
+    "hp_bonus2": 5,
+    "exp_gain2": 5,
+    "roll_mod2": 0.5
+  },
+  "a Goblin": {
+    "hp_bonus2": 30,
+    "exp_gain2": 0.5,
+    "roll_mod2": 0.5
+  },
+  "an Orc": {
+    "hp_bonus2": 5,
+    "exp_gain2": 5,
+    "roll_mod2": 3
+  },
+  "a Fungus": {
+    "hp_bonus2": 10,
+    "exp_gain2": 5,
+    "roll_mod2": 1
+  },
+  "an Ent": {
+    "hp_bonus2": 25,
+    "exp_gain2": 5,
+    "roll_mod2": 1
+  },
+  "a Mimic": {
+    "hp_bonus2": -25,
+    "exp_gain2": 2,
+    "roll_mod2": 1.75
+  },
+  "a Slime": {
+    "hp_bonus2": -50,
+    "exp_gain2": 10,
+    "roll_mod2": 2
+  }
+}
+
+
+
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.hp = 10
+        self.lvl = 1
+        self.exp = 1
+        self.gold = 1
+        self.inventory = []
+        self.mainhand = None
+        self.offhand = None
+        self.race = None
+        self.tarot = None
+        self.keys = 0
+        self.roll_mod = 0
+        self.current_room = "Guides Realm"
+
+    def Venture(self, direction, rooms):
+        exits = [d for d, v in rooms[self.current_room].items() if d in ['north', 'south', 'east', 'west', 'in', 'out'] and v]
+        if direction in exits:
+            new_room = rooms[self.current_room][direction]
+            if "Requires" in rooms[new_room]:
+                required_key = rooms[new_room]["Requires"]
+                if required_key in self.inventory:
+                    self.inventory.remove(required_key)
+                    print(f"You unlocked {new_room}!")
+                else:
+                    print(f"{new_room} is locked. You need the {required_key}.")
+                return
+            print(f"You venture {direction} to {new_room}.")
+            print(f"{rooms[new_room]['desc']}")
+            self.current_room = new_room
+            self.pickup_key(new_room, rooms)
+            self.check_trap(new_room, rooms)
+        else:
+            print(f"{self.name}, You cannot go that way.")
+
+    def pickup_key(self, room, rooms):
+        key_info = rooms[room].get("Key")
+        if key_info:
+            if isinstance(key_info, dict):
+                key_name = key_info["Name"]
+            else:
+                key_name = key_info
+            self.inventory.append(key_name)
+            print(f"You found the {key_name} in {room}!")
+
+    def check_trap(self, room, rooms):
+        if "Trap" in rooms[room]:
+            print(f"You triggered a trap in {room}!")
+        # Add trap logic here
+        
+    
+                
+            
+    def starterweapon(self, room, rooms):
+        print("Choose your starter weapon:")
+        weapons = list(firstweapons)
+        print(", ".join(weapons[:-1]) + ", or " + weapons[-1])
+        while True:
+            choice = input("Type the name of your chosen weapon: ")
+            if choice in firstweapons:
+                self.mainhand = choice
+                self.roll_mod = firstweapons[choice]["roll_mod"]
+                print(f"You have chosen the {choice}.")
+                break
+            else:
+                print("That is not one of the gifts I offer. Please, I don't have all day.")
+
+    def reading(self, room, rooms):
+        while True:
+            answer = input("Would you like a reading? ").lower()
+            if answer == "yes":
+                self.tarot = random.choice(list(tarot))
+                self.hp += tarot[self.tarot]["hp_bonus1"]
+                self.exp += tarot[self.tarot]["exp_gain1"]
+                self.roll_mod += tarot[self.tarot]["roll_mod1"]
+                print(f"Now, {self.name}, You shall receive a reading, it will help you in the future.")
+                print(f"{self.name}, just so happens to call, {self.tarot}. Come back soon.")
+                break
+            elif answer == "no":
+                print(f"{self.name}, an unfortunate decision. Come back later.")
+                break
+            else:
+                print(f"{self.name}, I don't like repeating myself, yes or no?")
+                
+    def racechoice(self, room, rooms):
+        print("What race would you like to be?")
+        race = list(races)
+        print(", ".join(race[:-1]) + ", or " + race[-1])
+    
+        while True:
+            racechoice = input("Type the name of your chosen race: ")
+            if racechoice in races:
+                self.race = racechoice
+                self.hp += races[racechoice]["hp_bonus2"]
+                self.exp += races[racechoice]["exp_gain2"]
+                self.roll_mod += races[racechoice]["roll_mod2"]
+                print(f"{self.name}, you are now {self.race}. Farewell, Traveler.")
+                break
+            else:
+                print("Interesting, but not quite.")
+                
+    def gain_exp(self, amount):
+        self.exp += amount
+        print(f"Gained {amount} experience!")
+        self.level_up()
+
+    def level_up(self):
+        if self.exp >= self.lvl * 100:
+            self.lvl += 1
+            self.exp = 0
+            self.hp += 1
+            print(f"Leveled up to {self.lvl}! HP increased by 1.")
+
+    def roll(self, sides):
+        return random.randint(1, sides)
+
+    def Map(self, rooms):
+        print(f"Current Location: {self.current_room}.")
+        print(f"{rooms[self.current_room]['desc']}")
+        print("Exits:")
+        for direction, room in rooms[self.current_room].items():
+                if direction in ['north', 'south', 'east', 'west']:
+                    print(f"- {direction}: {room}")
+                    
+    
+
+
+
+print(r"                                                |>>>                             ")
+print(r"                                                |                                ")
+print(r"                                            _  _|_  _                            ")
+print(r"                                           |;|_|;|_|;|                           ")
+print(r"                                           \\.    .  /                           ")
+print(r"                                            \\:  .  /                            ")
+print(r"                                             ||:   |                             ")
+print(r"                                             ||:.  |                             ")                              
+print(r"                                             ||:  .|                             ")
+print(r"                                             ||:   |       \,/                   ")
+print(r"                                             ||: , |            /`\              ")
+print(r"                                             ||:   |                             ")
+print(r"                                             ||: . |                             ")
+print(r"              __                            _||_   |                             ")
+print(r"     ____--`~    '--~~__            __ ----~    ~`---,              ___          ")
+print(r"-~--~                   ~---__ ,--~'                  ~~----_____-~'   `~----~~  ")
+print("<=={==========>     <==========}==>")
+print("Welcome to Saught a text based RPG")
+print("<=={==========>     <==========}==>")
+name = input(" Create new Character: ")
+        
+player = Player(name)        
+        
+while True:
+    action = input("Venture? (north, south, east, west, map) ").lower().strip()
+    if action in ['north', 'south', 'east', 'west', 'in', 'out']:
+        player.Venture(action, rooms)
+        if "action" in rooms[player.current_room]:
+            if rooms[player.current_room]["action"] == "reading":
+                player.reading(player.current_room, rooms)
+        if "action" in rooms[player.current_room]:
+            if rooms[player.current_room]["action"] == "firstmainhand":
+                player.starterweapon(player.current_room, rooms)
+        if "action" in rooms[player.current_room]:
+            if rooms[player.current_room]['action'] == "racechoice":
+                player.racechoice(player.current_room, rooms)
+                    
+    elif action == "map":
+        print("You open your map and cross-reference your surroundings.")
+        player.Map(rooms)
+
+    
+        
+        
+
